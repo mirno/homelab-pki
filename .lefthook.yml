@@ -15,5 +15,5 @@ pre-commit:
 
 pre-push:
   commands:
-    go-sec:
+    gosec:
       run: gosec ./...

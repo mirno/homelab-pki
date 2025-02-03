@@ -13,6 +13,8 @@ pkgs.mkShell {
     pkgs.golangci-lint  # Linter for Go code
     pkgs.delve          # Debugger for Go
     pkgs.gotools        # Miscellaneous Go tools
+
+    pkgs.gosec
   ];
 }
 

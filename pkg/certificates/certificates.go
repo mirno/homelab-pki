@@ -12,10 +12,7 @@ import (
 	"fmt"
 	"math/big"
 	"net"
-	"os"
 	"time"
-
-	"github.com/goccy/go-json"
 )
 
 const (
@@ -72,28 +69,6 @@ func GenerateCSRFromConfig(commonName string, sans []string, conf *SigningConfig
 	}
 
 	return csrBytes, privateKey, nil
-}
-
-// ParseConfigFromFile retrieves the signing config from a JSON file
-func ParseConfigFromFile(fileName string) (SigningConfig, error) {
-	if fileName == "" {
-		fileName = "signing.conf"
-	}
-
-	var config SigningConfig
-
-	//nolint:gosec // loads a configuration file
-	data, err := os.ReadFile(fileName)
-	if err != nil {
-		return config, fmt.Errorf("unable to parse config: %w", err)
-	}
-
-	err = json.Unmarshal(data, &config)
-	if err != nil {
-		return config, fmt.Errorf("unable to unmarshall config: %w", err)
-	}
-
-	return config, nil
 }
 
 // Bad implementation of functions, requires improvements
@@ -299,33 +274,6 @@ func ConvertPemCER2x509Cert(pemData string) (*x509.Certificate, error) {
 	}
 
 	return cert, nil
-}
-
-// ReadAndValidateCSR  reads the filepath
-// validates & returns the CSR in PEMstring format.
-// TODO: we might refactor and use io.Reader.
-func ReadAndValidateCSR(filePath string) (string, error) {
-	//nolint:gosec // loads a CSR
-	pemData, err := os.ReadFile(filePath)
-	if err != nil {
-		return "", fmt.Errorf("unable to read csr from path: %s, error: %w", filePath, err)
-	}
-
-	block, _ := pem.Decode(pemData)
-	if block == nil {
-		return "", fmt.Errorf("failed to decode pemData: %w", err)
-	}
-
-	csr, err := x509.ParseCertificateRequest(block.Bytes)
-	if err != nil {
-		return "", fmt.Errorf("failed to parse csr: %w", err)
-	}
-
-	if err := csr.CheckSignature(); err != nil {
-		return "", fmt.Errorf("failed to validate signature of csr: %w", err)
-	}
-
-	return string(pemData), nil
 }
 
 // ConvertDERCSR2PEMCSR converts the CSRDER output
