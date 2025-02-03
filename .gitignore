@@ -1,0 +1,12 @@
+# Ignore private directory
+.private/
+
+# Ignore environment files
+.envrc
+.env.local
+
+# ignore coverage
+coverage*
+
+# Ignore compiled binaries
+bin/

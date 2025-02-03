@@ -1,0 +1,10 @@
+version: '3'
+
+vars:
+  GO: '{{.GO | default "go"}}' # Default to 'go', but allow overrides example `GO=richgo task test`
+
+tasks:
+  test:
+    desc: Execute tests with coverage
+    cmds:
+      - "{{.GO}}  test -v --race ./... -cover -timeout 120s" # TODO: make parameter/var of ''richgo'/'go' so we can override it if requires

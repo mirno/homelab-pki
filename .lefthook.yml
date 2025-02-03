@@ -1,0 +1,19 @@
+# yaml-language-server: $schema=https://json.schemastore.org/lefthook.json
+assert_lefthook_installed: true
+commit-msg:
+  commands:
+    commitlint:
+      run: grep -q "^fixup! " "{1}" | commitlint lint --message "{1}"
+    trailers:
+      run: git interpret-trailers --in-place --trailer "sign" --trim-empty "{1}"
+pre-commit:
+  commands:
+    lint:
+      run: golangci-lint run --allow-parallel-runners=false --allow-serial-runners=false
+    test:
+      run: task test
+
+pre-push:
+  commands:
+    go-sec:
+      run: gosec ./...
