@@ -93,7 +93,8 @@ tasks:
     silent: false
 
   docker:certbot:init:
-    desc: start the certbot docker container.
+    desc: "[deprecated] Start the certbot docker container."
+    summary: "[deprecated]  replace by compose:certbot:standalone:test"
     deps:
       # - docker:certbot:clear
       - step:get-root-ca
@@ -118,7 +119,7 @@ tasks:
           --no-eff-email
 
   compose:certbot:webroot:init:
-    desc: Run webroot test, point to nginx service
+    desc: Initialized webroot for the nginx service
     deps:
       # - docker:certbot:clear
       - step:get-root-ca
@@ -137,7 +138,8 @@ tasks:
           --register-unsafely-without-email
 
   compose:certbot:renew:
-    desc: Run webroot test, point to nginx service
+    desc: Renew the certbot certificates from the config
+    summary: Within the volume [config/certbot/renewal/*.conf] contain the renewal config of all certificates.
     deps:
       # - docker:certbot:clear
       - step:get-root-ca
@@ -209,11 +211,9 @@ tasks:
     desc: Verify the ciphers of your certificate. For more information please see 'https://ciphersuite.info/'
     cmd: nmap --script ssl-enum-ciphers -p {{.PORT}} {{.HOST}}
 
-  verify:san:
+  verify:certificate:
     desc: verify the subject alternative names of the CA
-    vars:
-      PORT: "9000"
-    cmd: openssl s_client -connect {{.HOST}}:{{ .PORT | default "9000" }} -servername {{.HOST}} | openssl x509 -text -noout | grep -A2 "Subject Alternative Name"
+    cmd: openssl s_client -connect {{.HOST}}:{{ .PORT | default "9000" }} -servername {{.HOST}} | openssl x509 -text -noout # | grep -A2 "Subject Alternative Name"
 
   test:
     desc: Execute tests with coverage

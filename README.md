@@ -156,10 +156,17 @@ Or check the [shell.nix](shell.nix) file and install the packages on your machin
 6. Certbot demo
   ```task
   task docker:certbot:init
+  # or
+  task compose:certbot:standalone:test
   ```
 7. nginx demo
   ```task
-  task echo:up # nginx expects 'step-ca-local' to be resolvable. If the step-ca-local contain is not running, then run `task step:up`
+  task echo:up # nginx expects 'nginx' to be resolvable. If the step-ca-local contain is not running, then run `task step:up`
+  task compose:certbot:webroot:init
+  task verify:certificate HOST=nginx PORT=443 # verify the DNS name and date !
+  task compose:certbot:renew   
+  task compose:nginx:reload # reload the nginx config to install the new certificates without downtime.
+  task verify:certificate HOST=nginx PORT=443 # verify the DNS name and date !
   ```
 
 #### Troubleshooting
