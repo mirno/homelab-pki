@@ -21,7 +21,7 @@ import (
 )
 
 const (
-	// RootCACommonName is the replacement of the root CA G3 commonname
+	// RootCACommonName is the replacement of the root CA Issuer commonname
 	RootCACommonName                 entities.RootCAIssuerCN = "GMem"
 	pemBlockCertificateType          string                  = "CERTIFICATE"
 	pemBlockCertificateRequestType   string                  = "CERTIFICATE REQUEST"

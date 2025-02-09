@@ -15,6 +15,26 @@ pkgs.mkShell {
     pkgs.gotools        # Miscellaneous Go tools
 
     pkgs.gosec
+
+    pkgs.docker
+
+    # cert tools
+    pkgs.step-cli
+    pkgs.step-ca # local certificate authority alternative providing ACME server
+    # pkgs.certbot # outdated, v3 is released but not supported by nix. Please use: https://eff-certbot.readthedocs.io/en/stable/install.html#snap-recommended  # ACME client that can obtain certs and extensibly update server configurations
+    pkgs.openssl
+
+    pkgs.jq
+
+    # DNS
+    pkgs.dnsmasq
+    pkgs.dig
+    pkgs.nmap
+    pkgs.cfssl
+    
+
+    # experimental
+    pkgs.bat
   ];
 }
 

@@ -7,17 +7,6 @@ import (
 	"testing"
 )
 
-// TODO(william) Implement parameterized test
-
-// func TestGenerateCSRSANs(t *testing.T) {
-// 	test := []struct {
-// 		name string
-// 		dnsSANs []string
-// 		ipSANs []string
-// 		validate func(*testing.T, *x509.CertificateRequest)
-// 	}
-// } ... unimplemented parameterized test
-
 func TestGenerateCSR(t *testing.T) {
 	t.Parallel()
 

@@ -4,6 +4,7 @@
 # Ignore environment files
 .envrc
 .env.local
+.env.homelab
 
 # ignore coverage
 coverage*

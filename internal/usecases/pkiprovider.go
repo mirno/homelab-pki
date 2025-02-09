@@ -8,6 +8,7 @@ import (
 
 type PKIProvider interface {
 	GetCertificate(ctx context.Context, id string) (*entities.CertificateStore, error)
+	// GetRootCA
 	ListCertificates(ctx context.Context, options ...CertificateOption) (map[string]*entities.CertificateStore, error)
 	CreateCertificate(ctx context.Context, csr *x509.CertificateRequest, options ...CertificateOption) (*entities.CertificateStore, error)
 	RenewCertificate(ctx context.Context, id string, csr *x509.CertificateRequest, options ...CertificateOption) (*entities.CertificateStore, error)

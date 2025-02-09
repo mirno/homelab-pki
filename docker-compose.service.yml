@@ -1,0 +1,46 @@
+services:
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    ports:
+      - "81:81"
+      - "82:82"
+    volumes:
+      - ./config/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    networks:
+      - shared_network
+    restart: always
+
+  # certbot:
+  #   image: certbot/certbot
+  #   container_name: certbot
+  #   volumes:
+  #     - certs:/etc/letsencrypt
+  #     - certbot-www:/var/www/certbot
+
+  # caddy:
+  #   image: caddy:alpine
+  #   container_name: caddy
+  #   restart: always
+  #   volumes:
+  #     - acme-challenges:/var/www/acme
+  #     - config/Caddyfile:/etc/caddy/Caddyfile
+  #   ports:
+  #     - "82:82"
+
+  echo:
+    build: 
+      context: .
+      dockerfile: Dockerfile.simple-echo-server
+    container_name: echo
+    ports:
+      - "8085:8085"
+    restart: always
+    networks:
+      - shared_network
+
+networks:
+  shared_network:
+    external: true
+
+

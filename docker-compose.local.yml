@@ -1,0 +1,23 @@
+services:
+  step:
+    image: smallstep/step-ca
+    container_name: step-ca-local
+    ports:
+      - "${STEP_CA_PORT:-9000}:${STEP_CA_PORT:-9000}"
+    volumes:
+      - step:/home/step
+    # environment:
+      # - DOCKER_STEPCA_INIT_PASSWsORD=${SMALLSTEP_CA_KEY_PASSWORD:? SMALLSTEP_CA_KEY_PASSWORD required for local setup...}
+    env_file: 
+      - ".env"
+      - ".env.local"
+    networks:
+      - shared_network
+    restart: always
+
+volumes:
+  step:
+
+networks:
+  shared_network:
+    external: true

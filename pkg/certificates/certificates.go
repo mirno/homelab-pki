@@ -41,7 +41,7 @@ var (
 
 // GenerateCSRFromConfig creates a DER-encoded certificate signing request (CSR)
 func GenerateCSRFromConfig(commonName string, sans []string, conf *SigningConfig) ([]byte, *rsa.PrivateKey, error) {
-	// TODO(mirno) Build option to provide  ecdsa as well
+	// TODO Build option to provide  ecdsa as well
 	privateKey, err := rsa.GenerateKey(rand.Reader, conf.BitSize)
 	if err != nil {
 		return nil, nil, fmt.Errorf("error generating x509 private key: %w", err)
@@ -198,7 +198,7 @@ func DecodeAndParseCSRfromBytes(csrPEM []byte) (*x509.CertificateRequest, error)
 // Deprecated: input any should be replace to avoid type errors.
 func ConvertPrivateKeyToPEM(input any) (string, error) {
 	var pemBlock *pem.Block
-	// TODO(mirno) improve intelligence of function and use tests/benchmarks to improve
+	// TODO improve intelligence of function and use tests/benchmarks to improve
 	switch key := input.(type) {
 	case *rsa.PrivateKey:
 		derEncodedKey := x509.MarshalPKCS1PrivateKey(key)

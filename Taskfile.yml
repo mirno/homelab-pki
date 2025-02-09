@@ -1,9 +1,162 @@
 version: '3'
 
+dotenv:
+  - .env
+
 vars:
   GO: '{{.GO | default "go"}}' # Default to 'go', but allow overrides example `GO=richgo task test`
+  EXPORT: '{{.EXPORT | default "set"}}' # Default to 'go', but allow overrides example `GO=richgo task test`
+  DOCKER_COMPOSE: '{{ .DOCKER_COMPOSE | default "docker compose" }}'
+  ENVIRONMENT: "{{.ENVIRONMENT}}"
+  STEP_PASSWORD_FILE: "{{.STEP_PASSWORD_FILE}}"
+  COMPOSE_FILE: "docker-compose.{{.ENVIRONMENT}}.yml"
+  HOST: "localhost"
+  PORT: "8085"
 
 tasks:
+  step:init:
+    desc: "Start step:CA (Dynamic Environment)"
+    cmds:
+      - echo "Using environment $ENVIRONMENT"
+      - "{{.DOCKER_COMPOSE}} -f {{.COMPOSE_FILE}} -f docker-compose.init.yml --env-file .env.{{.ENVIRONMENT}} up"
+    silent: false
+  step:up:
+    desc: "Start step:CA (Dynamic Environment)"
+    cmds:
+      - echo "Using environment $ENVIRONMENT"
+      - "{{.DOCKER_COMPOSE}} -f {{.COMPOSE_FILE}} --env-file .env.{{.ENVIRONMENT}} up -d"
+    silent: false
+
+  step:down:
+    desc: "Stop step:CA (Dynamic Environment)"
+    cmds:
+      - "{{.DOCKER_COMPOSE}} -f {{.COMPOSE_FILE}} --env-file .env.{{.ENVIRONMENT}} down"
+    silent: false
+
+  step:clean:
+    desc: "Remove volumes and reset step:CA"
+    cmds:
+      - "{{.DOCKER_COMPOSE}} -f {{.COMPOSE_FILE}} --env-file .env.{{.ENVIRONMENT}} down -v"
+    silent: false
+
+  step:shell:
+      desc: "Enter the running step:CA container"
+      cmds:
+        - docker exec -it step-ca-{{.ENVIRONMENT}} sh
+      silent: false
+  
+  step:setup-client:
+    desc: "setup client configuration after init"
+    deps:
+      - step:up
+    vars:
+      CA_FINGERPRINT:
+        sh: docker exec step:ca-local step certificate fingerprint /home/step/certs/root_ca.crt
+    cmds:
+
+      - echo "Using CA Fingerprint {{.CA_FINGERPRINT}}"
+      - echo "Bootstrapping client with step:CA..."
+      - step ca bootstrap --ca-url "https://{{.STEP_CA_DNS}}:{{.STEP_CA_PORT}}" --fingerprint "{{.CA_FINGERPRINT}}" --install
+    
+  step:generate:certificate:
+    desc: "Generate a certificate using step-ca | default using localhost"
+    summary: "example: `task step:generate:certificate CERT_DIR=.private/ HOSTNAME=example.com STEP_PASSWORD_FILE=.private/secret`"
+    vars:
+      CERT_DIR: "{{.CERT_DIR | default `.private`}}"
+      HOSTNAME: "{{.HOSTNAME | default `localhost`}}"
+    env:
+      STEP_PASSWORD_FILE: "{{.STEP_PASSWORD_FILE}}" # task step:generate:certificate STEP_PASSWORD_FILE=.private/secret
+    cmds:
+      - mkdir -p "{{.CERT_DIR}}"
+      - step ca certificate "{{.HOSTNAME}}" "{{.CERT_DIR}}/{{.HOSTNAME}}.crt" "{{.CERT_DIR}}/{{.HOSTNAME}}.key"
+      - echo "Certificate stored at {{.CERT_DIR}}/{{.HOSTNAME}}.crt"
+      - echo "Key stored at {{.CERT_DIR}}/{{.HOSTNAME}}.key"
+
+  step:get-root-ca:
+    desc: Gets the root-ca from step-ca and stores under .private/root_ca.crt
+    cmd: step ca root .private/root_ca.crt -f
+
+  docker:echo:build:
+    desc: "Build the dockerfile for the echo server"
+    cmd: docker build -f Dockerfile.simple-echo-server -t simple-echo-server:latest .
+  
+  docker:echo:run:
+    desc: "Run the echo server after building"
+    deps:
+      - docker:echo:build
+    cmd: docker run --rm -p 8085:8085 simple-echo-server
+
+  docker:kill:
+    desc: "Kill all running Docker containers"
+    cmds:
+      - docker ps -q | xargs -r docker kill
+    silent: false
+
+  docker:certbot:init:
+    desc: start the certbot docker container.
+    deps:
+      # - docker:certbot:clear
+      - step:get-root-ca
+    cmds:
+      - |
+        sudo docker run -it --rm --name certbot \
+          -v "/etc/letsencrypt:/etc/letsencrypt" \
+          -v "/var/lib/letsencrypt:/var/lib/letsencrypt" \
+          -v "/var/www/letsencrypt:/var/www/letsencrypt" \
+          -v ~/.step/certs/root_ca.crt:/usr/local/share/ca-certificates/step-ca.crt:ro \
+          --env REQUESTS_CA_BUNDLE=/usr/local/share/ca-certificates/step-ca.crt \
+          -p 80:80 \
+          --network=shared_network \
+          certbot/certbot certonly \
+          --register-unsafely-without-email \
+          --standalone \
+          --preferred-challenges http \
+          --server https://step-ca-local:9000/acme/acme-http/directory \
+          --http-01-port 80 \
+          -d certbot \
+          --agree-tos \
+          --no-eff-email
+
+  echo:up:
+    desc: build nginx with the docker echo
+    deps:
+      - docker:echo:build
+      # - dnsmasq:start
+      # - step:up
+    cmd: docker compose  -f docker-compose.service.yml up --build -d
+
+  echo:down:
+    desc: build nginx with the docker echo
+    cmd: docker compose  -f docker-compose.service.yml down
+
+  jobs:kill:
+    desc: kills running jobs
+    cmd: jobs -p | xargs -r kill -9
+
+  dnsmasq:start:
+    desc: "Start dnsmasq using the local config | not ideal since we need to point to 127.0.0.1 as DNS resolver"
+    deps:
+      - dnsmasq:stop
+    cmds:
+      - sudo dnsmasq --conf-file=config/dnsmasq/dnsmasq.conf --keep-in-foreground -d
+    silent: false
+
+  dnsmasq:stop:
+    desc: forcefully stops dnsmasq and all jobs. 'lsof -i :53 -S', 'ss -tulpn | grep :53' 'jobs'
+    deps:
+      - jobs:kill
+    cmds:
+      - sudo pkill -9 dnsmasq || true
+
+
+  verify:ciphers:
+    desc: Verify the ciphers of your certificate. For more information please see 'https://ciphersuite.info/'
+    cmd: nmap --script ssl-enum-ciphers -p {{.PORT}} {{.HOST}}
+
+  verify:san:
+    desc: verify the subject alternative names of the CA
+    cmd: openssl s_client -connect {{.HOST}}:9000 -servername {{.HOST}} | openssl x509 -text -noout | grep -A2 "Subject Alternative Name"
+
   test:
     desc: Execute tests with coverage
     cmds:
