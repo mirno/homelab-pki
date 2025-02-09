@@ -99,7 +99,7 @@ tasks:
       - step:get-root-ca
     cmds:
       - |
-        sudo docker run -it --rm --name certbot \
+        docker run -it --rm --name certbot \
           -v "/etc/letsencrypt:/etc/letsencrypt" \
           -v "/var/lib/letsencrypt:/var/lib/letsencrypt" \
           -v "/var/www/letsencrypt:/var/www/letsencrypt" \
@@ -113,9 +113,61 @@ tasks:
           --preferred-challenges http \
           --server https://step-ca-local:9000/acme/acme-http/directory \
           --http-01-port 80 \
+          -d certbot2 \
+          --agree-tos \
+          --no-eff-email
+
+  compose:certbot:webroot:init:
+    desc: Run webroot test, point to nginx service
+    deps:
+      # - docker:certbot:clear
+      - step:get-root-ca
+    vars:
+      DOMAIN: "nginx" # nginx is used since the echo service does not host the http challenge.
+    cmds:
+      - |
+        docker compose  -f docker-compose.service.yml run --rm --name certbot  \
+          certbot certonly \
+          --webroot \
+          --webroot-path /var/www/certbot/ \
+          --server https://step-ca-local:9000/acme/acme-http/directory \
+          -d '{{.DOMAIN | default "nginx"}}' \
+          --agree-tos \
+          --no-eff-email \
+          --register-unsafely-without-email
+
+  compose:certbot:renew:
+    desc: Run webroot test, point to nginx service
+    deps:
+      # - docker:certbot:clear
+      - step:get-root-ca
+    cmds:
+      - |
+        docker compose  -f docker-compose.service.yml run --rm --name certbot  \
+          certbot renew \
+          --server https://step-ca-local:9000/acme/acme-http/directory \
+
+  compose:certbot:standalone:test:
+    desc: standalone test using certbot
+    deps:
+      - step:get-root-ca
+    cmds:
+      - |
+        docker compose  -f docker-compose.service.yml run --rm --name certbot \
+          -p 80:80 \
+          certbot certonly \
+          --register-unsafely-without-email \
+          --standalone \
+          --preferred-challenges http \
+          --server https://step-ca-local:9000/acme/acme-http/directory \
+          --http-01-port 80 \
           -d certbot \
           --agree-tos \
           --no-eff-email
+
+  compose:nginx:reload:
+    desc: reload nginx
+    cmd: docker compose -f docker-compose.service.yml exec nginx nginx -s reload
 
   echo:up:
     desc: build nginx with the docker echo
@@ -124,6 +176,10 @@ tasks:
       # - dnsmasq:start
       # - step:up
     cmd: docker compose  -f docker-compose.service.yml up --build -d
+  
+  echo:restart:
+    desc: restart docker services
+    cmd: docker compose  -f docker-compose.service.yml restart
 
   echo:down:
     desc: build nginx with the docker echo
@@ -155,7 +211,9 @@ tasks:
 
   verify:san:
     desc: verify the subject alternative names of the CA
-    cmd: openssl s_client -connect {{.HOST}}:9000 -servername {{.HOST}} | openssl x509 -text -noout | grep -A2 "Subject Alternative Name"
+    vars:
+      PORT: "9000"
+    cmd: openssl s_client -connect {{.HOST}}:{{ .PORT | default "9000" }} -servername {{.HOST}} | openssl x509 -text -noout | grep -A2 "Subject Alternative Name"
 
   test:
     desc: Execute tests with coverage

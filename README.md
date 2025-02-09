@@ -191,8 +191,25 @@ You can store the password file as well
   # Store secret in .private/secret
   docker run  -v step:/home/step smallstep/step-ca cat secrets/password | tee .private/secret
   chmod 600 .private/secret
+
+  # Potentially modify the command yourself.
+  step ca certificate --provisioner-password-file .private/secret
 ```
 
+##### resolve hostnames
+
+You might want to append the following to your hosts file `etc/hosts`
+```
+# custom
+127.0.0.1   certbot
+127.0.0.1   step-ca-local
+127.0.0.1   echo
+```
+
+Alternatives are:
+- dnsmasq
+- coredns
+- [HOSTALIASES](https://www.man7.org/linux/man-pages/man3/gethostbyname_r.3.html)
 
 
 

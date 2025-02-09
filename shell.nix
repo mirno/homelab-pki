@@ -31,6 +31,8 @@ pkgs.mkShell {
     pkgs.dig
     pkgs.nmap
     pkgs.cfssl
+    pkgs.coredns
+    # pkgs.nginx
     
 
     # experimental
