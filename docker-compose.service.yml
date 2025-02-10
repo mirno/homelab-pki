@@ -43,7 +43,7 @@ services:
 
 networks:
   public:
-    external: true
+    # external: true
   internal:
     internal: true
   certificates:

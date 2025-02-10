@@ -14,7 +14,7 @@ services:
     networks:
       - certificates
       - internal
-      - shared_network
+      - public
     restart: always
 
 volumes:
@@ -25,4 +25,4 @@ networks:
     internal: true
   certificates:
     internal: true
-  shared_network:
+  public:

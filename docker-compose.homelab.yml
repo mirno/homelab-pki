@@ -10,11 +10,11 @@ services:
       # - DOCKER_STEPCA_INIT_PASSWsORD=${SMALLSTEP_CA_KEY_PASSWORD:? SMALLSTEP_CA_KEY_PASSWORD required for local setup...}
     env_file: 
       - ".env"
-      - ".env.local"
+      - "${CD_ENV_FILE:-stack.env}" # Portainer should be parameterized somehow.
     networks:
       - certificates
       - internal
-      - shared_network
+      - public
     restart: always
 
 volumes:
@@ -25,4 +25,4 @@ networks:
     internal: true
   certificates:
     internal: true
-  shared_network:
+  public:
