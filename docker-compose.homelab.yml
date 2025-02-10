@@ -1,7 +1,7 @@
 services:
   step:
     image: smallstep/step-ca
-    container_name: step-ca-local
+    container_name: step-ca-homelab
     ports:
       - "${STEP_CA_PORT:-9000}:${STEP_CA_PORT:-9000}"
     volumes:
