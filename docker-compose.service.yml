@@ -14,8 +14,10 @@ services:
       - ./config/certbot/www/:/var/www/certbot/:ro
       - ./config/certbot/conf/:/etc/nginx/ssl/:ro
     networks:
-      - shared_network
+      - public
       - internal
+      - certificates
+
     restart: always
 
   certbot:
@@ -28,8 +30,7 @@ services:
       - ./config/certbot/www/:/var/www/certbot/:rw
       - ./config/certbot/conf/:/etc/letsencrypt/:rwls
     networks:
-      - shared_network
-      - internal
+      - certificates
 
   echo:
     build: 
@@ -41,9 +42,10 @@ services:
       - internal
 
 networks:
-  shared_network:
+  public:
     external: true
   internal:
     internal: true
+  certificates:
 
 

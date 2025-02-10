@@ -161,7 +161,7 @@ Or check the [shell.nix](shell.nix) file and install the packages on your machin
   ```
 7. nginx demo
   ```task
-  task echo:up # nginx expects 'nginx' to be resolvable. If the step-ca-local contain is not running, then run `task step:up`
+  task compose:echo:up # nginx expects 'nginx' to be resolvable. If the step-ca-local contain is not running, then run `task step:up`
   task compose:certbot:webroot:init
   task verify:certificate HOST=nginx PORT=443 # verify the DNS name and date !
   task compose:certbot:renew   

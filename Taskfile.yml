@@ -171,7 +171,7 @@ tasks:
     desc: reload nginx
     cmd: docker compose -f docker-compose.service.yml exec nginx nginx -s reload
 
-  echo:up:
+  compose:echo:up:
     desc: build nginx with the docker echo
     deps:
       - docker:echo:build
@@ -179,11 +179,11 @@ tasks:
       # - step:up
     cmd: docker compose  -f docker-compose.service.yml up --build -d
   
-  echo:restart:
+  compose:echo:restart:
     desc: restart docker services
     cmd: docker compose  -f docker-compose.service.yml restart
 
-  echo:down:
+  compose:echo:down:
     desc: build nginx with the docker echo
     cmd: docker compose  -f docker-compose.service.yml down
 

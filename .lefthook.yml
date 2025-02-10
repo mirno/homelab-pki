@@ -8,10 +8,12 @@ commit-msg:
       run: git interpret-trailers --in-place --trailer "sign" --trim-empty "{1}"
 pre-commit:
   commands:
-    lint:
-      run: golangci-lint run --allow-parallel-runners=false --allow-serial-runners=false
     test:
       run: task test
+      priority: 1
+    lint:
+      run: golangci-lint run --allow-parallel-runners=false --allow-serial-runners=false
+      priority: 2
 
 pre-push:
   commands:
