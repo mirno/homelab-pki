@@ -1,7 +1,7 @@
 version: '3'
 
-dotenv:
-  - .env
+# dotenv: # override the set environment variables. Already loaded using direnv (.envrc)
+#   - .env
 
 vars:
   GO: '{{.GO | default "go"}}' # Default to 'go', but allow overrides example `GO=richgo task test`
@@ -51,13 +51,13 @@ tasks:
       - step:up
     vars:
       CA_FINGERPRINT:
-        sh: docker exec step:ca-local step certificate fingerprint /home/step/certs/root_ca.crt
+        sh: docker exec step-ca-"{{.ENVIRONMENT}}" step certificate fingerprint /home/step/certs/root_ca.crt # TODO: Not ideal since the upstream environment does not contain this value.
     cmds:
 
       - echo "Using CA Fingerprint {{.CA_FINGERPRINT}}"
       - echo "Bootstrapping client with step:CA..."
-      - step ca bootstrap --ca-url "https://{{.STEP_CA_DNS}}:{{.STEP_CA_PORT}}" --fingerprint "{{.CA_FINGERPRINT}}" --install
-    
+      - step ca bootstrap --ca-url "https://{{.STEP_CA_DNS}}:{{.STEP_CA_PORT}}" --fingerprint "{{.CA_FINGERPRINT}}" --profile="{{.ENVIRONMENT}}" --install
+
   step:generate:certificate:
     desc: "Generate a certificate using step-ca | default using localhost"
     summary: "example: `task step:generate:certificate CERT_DIR=.private/ HOSTNAME=example.com STEP_PASSWORD_FILE=.private/secret`"
@@ -68,7 +68,7 @@ tasks:
       STEP_PASSWORD_FILE: "{{.STEP_PASSWORD_FILE}}" # task step:generate:certificate STEP_PASSWORD_FILE=.private/secret
     cmds:
       - mkdir -p "{{.CERT_DIR}}"
-      - step ca certificate "{{.HOSTNAME}}" "{{.CERT_DIR}}/{{.HOSTNAME}}.crt" "{{.CERT_DIR}}/{{.HOSTNAME}}.key"
+      - step ca certificate  "{{.HOSTNAME}}" "{{.CERT_DIR}}/{{.HOSTNAME}}.crt" "{{.CERT_DIR}}/{{.HOSTNAME}}.key" # 
       - echo "Certificate stored at {{.CERT_DIR}}/{{.HOSTNAME}}.crt"
       - echo "Key stored at {{.CERT_DIR}}/{{.HOSTNAME}}.key"
 
